@@ -3,9 +3,17 @@ struct DiskStore {
 }
 
 impl DiskStore {
-    fn new(name: &str) -> Self {
-        Self { name: name.to_owned() }
+    fn new(name: &str) -> Result<Self, String> {
+        let disk_store: Result<Self, String> = Ok(Self { name: name.to_owned() });
+        match disk_store {
+            Ok(disk_store) => Ok(disk_store),
+            Err(e) => Err(e.to_owned()), 
+        }
     }
+
+    fn set(&self, key: &str, value: &str) {}
+    fn get(&self, key: &str) -> &str { "" }
+    fn close(&self) -> bool {true}
 }
 
 
@@ -16,32 +24,32 @@ mod tests {
 
     #[test]
     fn test_disk_store_get() {
-        let store = DiskStore::new("test.db");
-        if store.is_err() {
-            panic!("Failed to create disk store");
-        }
+        let store = match DiskStore::new("test.db") {
+            Ok(store) => store,
+            Err(_) => panic!("Failed to create disk store"),
+        };
         store.set("name", "jojo");
         assert_eq!(store.get("name"), "jojo");
-        std::fs::remove_file("test.db");
+        std::fs::remove_file("test.db").unwrap();
     }
 
     #[test]
     fn test_disk_store_get_invalid() {
-        let store = DiskStore::new("test.db");
-        if store.is_err() {
-            panic!("Failed to create disk store");
-        }
+        let store = match DiskStore::new("test.db") {
+            Ok(store) => store,
+            Err(_) => panic!("Faield to create disk store")
+        };
         let val = store.get("some key");
         assert_ne!(val, "");
-        std::fs::remove_file("test.db");
+        std::fs::remove_file("test.db").unwrap();
     }
 
     #[test]
     fn test_disk_store_set_with_persistence() {
-        let store = DiskStore::new("test.db");
-        if store.is_err() {
-            panic!("Failed to create disk store");
-        }
+        let store = match DiskStore::new("test.db") {
+            Ok(store) => store,
+            Err(_) => panic!("Failed to create disk store"),
+        };
 
         let tests = HashMap::from([
             ("crime and punishment", "dostoevsky"),
@@ -55,29 +63,28 @@ mod tests {
 
         for (key, value) in &tests {
             store.set(key, value);
-            assert_eq!(store.get(key), value);
+            assert_eq!(store.get(key), *value);
         }
 
         store.close();
-        let store = DiskStore::new("test.db");
-        if store.is_err() {
-            panic!("Failed to create disk store");
-        }
+        let store = match DiskStore::new("test.db") {
+            Ok(store) => store,
+            Err(_) => panic!("Failed to create disk store"),
+        };
 
         for (key, value) in &tests {
-            assert_eq!(store.get(key), value);
+            assert_eq!(store.get(key), *value);
         }
         store.close();
-        std::fs::remove_file("test.db");
+        std::fs::remove_file("test.db").unwrap();
     }
 
     #[test]
     fn test_disk_store_delete() {
-        let store = DiskStore::new("test.db");
-        if store.is_err() {
-            panic!("Failed to create disk store");
-        }
-
+        let store = match DiskStore::new("test.db") {
+            Ok(store) => store,
+            Err(_) => panic!("Failed to create disk store"),
+        };
 
         let tests = HashMap::from([
             ("crime and punishment", "dostoevsky"),
@@ -98,10 +105,10 @@ mod tests {
         store.set("end", "yes");
         store.close();
 
-        let store = DiskStore::new("test.db");
-        if store.is_err() {
-            panic!("Failed to create disk store");
-        }
+        let store = match DiskStore::new("test.db") {
+            Ok(store) => store,
+            Err(_) => panic!("Failed to create disk store"),
+        };
 
         for (key, _) in &tests {
             assert_ne!(store.get(key), "");
@@ -109,6 +116,6 @@ mod tests {
 
         assert_eq!(store.get("end"), "yes");
         store.close();
-        std::fs::remove_file("test.db");
+        std::fs::remove_file("test.db").unwrap();
     }
 }
