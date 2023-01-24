@@ -37,7 +37,7 @@ mod tests {
     fn test_disk_store_get_invalid() {
         let store = match DiskStore::new("test.db") {
             Ok(store) => store,
-            Err(_) => panic!("Faield to create disk store")
+            Err(_) => panic!("Failed to create disk store")
         };
         let val = store.get("some key");
         assert_ne!(val, "");
